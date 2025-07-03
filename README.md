@@ -10,5 +10,5 @@ The code and dataset will be made publicly available after our paper is accepted
 We have collected and released a real-world X-ray image dataset, named HLXray, comprising 2130 pairs of low-dose and high-dose X-ray images (a total of 4260 images) with a resolution of . Each image within HLXray is derived from authentic scenarios, in which 400 pairs are accompanied by professional annotations detailing three types of defects. As far as we know, it is the first dataset that contains paired low-dose and high-dose X-ray images without any simulated data.
 # **Contact**
 For any questions or issues, feel free to reach out to
-# **Email**
-- [yourname@example.com](mailto:yourname@example.com)
+- **Junqiang Ye**: [yeshaoye770880@163.com](mailto:yeshaoye770880@163.com)
+- **Yuqun Yang**: [yqunyang@163.com](mailto:yqunyang@163.com)
