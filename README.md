@@ -37,7 +37,6 @@ cd ../mamba
 python setup.py install
 ```
 
-
 # 📊**Datasets**
 We have collected and released a real-world X-ray image dataset, named HLXray, comprising 2130 pairs of low-dose and high-dose X-ray images (a total of 4260 images) with a resolution of . Each image within HLXray is derived from authentic scenarios, in which 400 pairs are accompanied by professional annotations detailing three types of defects. As far as we know, it is the first dataset that contains paired low-dose and high-dose X-ray images without any simulated data.
 ![image](https://github.com/YqunYang/LXIE-net/blob/main/img/%E5%9B%BE%E7%89%872.png)
@@ -53,11 +52,21 @@ If you find this work useful, please cite:
   publisher={IEEE}
 }
 ```
+# 🔥**Model Training and test**
+```
+# train
+python train.py
+#test
+python test.py
+```
 
-# **Acknowledgements**
+# 📜**Acknowledgements**
 We would like to express our sincere thanks to the following open-source projects that made this work possible:
+
 **Mamba**: State Space Models for efficient sequence modeling.
+
 **causal-conv1d**: Efficient implementation of causal 1D convolutions.
+
 Their contributions to the research community are truly appreciated.
 
 # 👉**Contact**
