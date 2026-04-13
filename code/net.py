@@ -103,3 +103,84 @@ class DenseUnet(nn.Module):
         
         x = self.outc(x)
         return x
+
+class SpatialGatingUnit(nn.Module):
+    def __init__(self, d_ffn):
+        super().__init__()
+        half_dim = d_ffn // 2
+        self.norm = nn.LayerNorm(half_dim)
+        self.proj = nn.Conv1d(
+            in_channels=half_dim, 
+            out_channels=half_dim, 
+            kernel_size=3, 
+            padding=1, 
+            groups=half_dim 
+        )
+
+    def forward(self, x):
+        u, v = x.chunk(2, dim=-1)
+        v = self.norm(v)
+        v = v.permute(0, 2, 1) 
+        v = self.proj(v)
+        v = v.permute(0, 2, 1) 
+        uv = u * v 
+        return torch.cat([uv, u], dim=-1)
+    
+class XMambaLayer(nn.Module):
+    def __init__(self, dim, d_state=16, d_conv=4, expand=2):
+        super().__init__()
+        self.dim = dim
+        self.norm = nn.LayerNorm(dim)
+        self.mamba = Mamba(
+                d_model=dim, 
+                d_state=d_state,  
+                d_conv=d_conv,    
+                expand=expand,    
+        )
+        self.SGU = SpatialGatingUnit(d_ffn=dim)
+        
+    @autocast(enabled=False)
+    def forward(self, x):
+        if x.dtype == torch.float16:
+            x = x.type(torch.float32)
+        B, C = x.shape[:2]
+        img_dims = x.shape[2:]
+        n_tokens = img_dims[0] * img_dims[1]
+        
+        x_flat = x.reshape(B, C, n_tokens).transpose(-1, -2) # (B, L, C) 
+        x_SGU = self.SGU(x_flat)
+        x_norm = self.norm(x_flat)
+        x_mamba = self.mamba(x_norm)
+        x_out = x_mamba + x_SGU
+        out = x_out.transpose(-1, -2).reshape(B, C, *img_dims)
+        return out
+
+class SMambaLayer(nn.Module):
+    def __init__(self, dim, d_state=16, d_conv=4, expand=2):
+        super().__init__()
+        self.dim = dim
+        self.norm = nn.LayerNorm(dim)
+        self.mamba = Mamba(
+                d_model=dim, 
+                d_state=d_state,  
+                d_conv=d_conv,    
+                expand=expand,    
+        )
+        self.skip_scale = nn.Parameter(torch.ones(1))
+        
+    @autocast(enabled=False)
+    def forward(self, x):
+        if x.dtype == torch.float16:
+            x = x.type(torch.float32)
+        B, C = x.shape[:2]
+        img_dims = x.shape[2:]
+        n_tokens = img_dims[0] * img_dims[1]
+        
+        x_flat = x.reshape(B, C, n_tokens).transpose(-1, -2)
+        x_norm = self.norm(x_flat)
+        x_mamba = self.mamba(x_norm)
+        
+        x_out = x_mamba + x_flat * self.skip_scale
+        out = x_out.transpose(-1, -2).reshape(B, C, *img_dims)
+        return out
+    
